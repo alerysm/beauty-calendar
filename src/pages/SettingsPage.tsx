@@ -181,6 +181,28 @@ export function SettingsPage() {
               Nadie más tiene acceso a tu información. Exporta regularmente para hacer copias de seguridad.
             </p>
           </div>
+          <div className="flex items-center justify-center px-4 py-3 mt-2">
+            <p className="text-zinc-600 text-xs text-center">
+              Desarrollado por{' '}
+              <a
+                href="https://github.com/alerysm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                Alejandro Martinez
+              </a>
+              {' '}· GitHub{' '}
+              <a
+                href="https://github.com/alerysm"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                @alerysm
+              </a>
+            </p>
+          </div>
         </Section>
 
         {/* iOS install hint */}
