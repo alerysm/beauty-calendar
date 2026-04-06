@@ -135,6 +135,11 @@ interface AppStore {
     time: 'morning' | 'night',
   ) => ReturnType<typeof validateDayProducts>
   removeProductFromDay: (dateStr: string, productId: string, time: 'morning' | 'night') => void
+  addProductToMonth: (
+    yearMonth: string,
+    productId: string,
+    time: 'morning' | 'night',
+  ) => { applied: number; skipped: number }
   moveProduct: (
     fromDate: string,
     toDate: string,
@@ -226,6 +231,34 @@ export const useStore = create<AppStore>()(
             },
           }
         })
+      },
+
+      addProductToMonth: (yearMonth, productId, time) => {
+        const [year, month] = yearMonth.split('-').map(Number)
+        const daysInMonth = new Date(year, month, 0).getDate()
+        const { calendar, products } = get()
+
+        let applied = 0
+        let skipped = 0
+        const newCalendar = { ...calendar }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${yearMonth}-${String(day).padStart(2, '0')}`
+          const result = validateDayProducts(dateStr, productId, time, newCalendar, products)
+          if (result.valid) {
+            const entry = newCalendar[dateStr] ?? { date: dateStr, morning: [], night: [] }
+            newCalendar[dateStr] = {
+              ...entry,
+              [time]: [...entry[time], productId],
+            }
+            applied++
+          } else {
+            skipped++
+          }
+        }
+
+        set({ calendar: newCalendar })
+        return { applied, skipped }
       },
 
       moveProduct: (fromDate, toDate, productId, time) => {

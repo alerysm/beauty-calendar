@@ -16,12 +16,13 @@ interface DayModalProps {
 export function DayModal({ dateStr, onClose }: DayModalProps) {
   const products   = useProducts()
   const calendar   = useCalendar()
-  const { addProductToDay, removeProductFromDay } = useStore()
+  const { addProductToDay, removeProductFromDay, addProductToMonth } = useStore()
   const { showToast } = useToast()
 
   const [validation, setValidation] = useState<ValidationResult | null>(null)
   const [selectedTime, setSelectedTime] = useState<'morning' | 'night'>('morning')
   const [showPicker, setShowPicker] = useState(false)
+  const [repeatMonth, setRepeatMonth] = useState(false)
 
   if (!dateStr) return null
 
@@ -31,12 +32,25 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
   const getProduct = (id: string) => products.find(p => p.id === id)
 
   const handleAdd = (productId: string) => {
-    const result = addProductToDay(dateStr, productId, selectedTime)
-    if (!result.valid) {
-      setValidation(result)
-    } else {
-      showToast('Producto agregado', 'success')
+    if (repeatMonth) {
+      const yearMonth = dateStr.slice(0, 7)
+      const { applied, skipped } = addProductToMonth(yearMonth, productId, selectedTime)
+      showToast(
+        skipped > 0
+          ? `Agregado a ${applied} días (${skipped} omitidos por conflicto)`
+          : `Agregado a ${applied} días del mes`,
+        'success',
+      )
       setShowPicker(false)
+      setRepeatMonth(false)
+    } else {
+      const result = addProductToDay(dateStr, productId, selectedTime)
+      if (!result.valid) {
+        setValidation(result)
+      } else {
+        showToast('Producto agregado', 'success')
+        setShowPicker(false)
+      }
     }
   }
 
@@ -45,9 +59,9 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
     showToast('Producto eliminado', 'info')
   }
 
-  // Products not yet on this time slot
-  const usedIds = new Set([...entry.morning, ...entry.night])
-  const availableProducts = products.filter(p => !usedIds.has(p.id))
+  // Products not yet on the selected time slot
+  const usedInSlot = new Set(entry[selectedTime])
+  const availableProducts = products.filter(p => !usedInSlot.has(p.id))
 
   return (
     <>
@@ -100,9 +114,21 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
               <p className="text-zinc-400 text-sm font-medium mb-3">
                 Agregar a {selectedTime === 'morning' ? 'mañana' : 'noche'}:
               </p>
+
+              {/* Repeat month toggle */}
+              <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={repeatMonth}
+                  onChange={e => setRepeatMonth(e.target.checked)}
+                  className="w-4 h-4 rounded accent-skin-400"
+                />
+                <span className="text-zinc-400 text-sm">Repetir todo el mes</span>
+              </label>
+
               {availableProducts.length === 0 ? (
                 <p className="text-zinc-500 text-sm text-center py-4">
-                  Todos los productos ya están en este día
+                  Todos los productos ya están en esta rutina
                 </p>
               ) : (
                 <div className="grid grid-cols-1 gap-2">
@@ -130,7 +156,7 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
                 </div>
               )}
               <button
-                onClick={() => setShowPicker(false)}
+                onClick={() => { setShowPicker(false); setRepeatMonth(false) }}
                 className="mt-3 w-full py-2 text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
               >
                 Cancelar
