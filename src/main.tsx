@@ -3,12 +3,17 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
-// Register service worker (vite-plugin-pwa handles this in prod)
 if ('serviceWorker' in navigator) {
+  let refreshing = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true
+      window.location.reload()
+    }
+  })
+
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // SW registration is optional for dev
-    })
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
   })
 }
 
