@@ -6,6 +6,7 @@ import { Dashboard }    from './pages/Dashboard'
 import { ProductsPage } from './pages/ProductsPage'
 import { RulesPage }    from './pages/RulesPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { PlannerPage }  from './pages/PlannerPage'
 
 function PageContent() {
   const activeTab = useActiveTab()
@@ -17,6 +18,7 @@ function PageContent() {
     >
       {activeTab === 'today'    && <TodayPage />}
       {activeTab === 'calendar' && <Dashboard />}
+      {activeTab === 'planner'  && <PlannerPage />}
       {activeTab === 'products' && <ProductsPage />}
       {activeTab === 'rules'    && <RulesPage />}
       {activeTab === 'settings' && <SettingsPage />}

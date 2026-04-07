@@ -1,13 +1,14 @@
-import { CalendarDays, Package, BookOpen, Settings, Sun } from 'lucide-react'
+import { CalendarDays, Package, BookOpen, Settings, Sun, Sparkles } from 'lucide-react'
 import { TabType } from '../../types'
 import { useStore, useActiveTab } from '../../store/useStore'
 
 const TABS: { id: TabType; label: string; Icon: typeof Sun }[] = [
-  { id: 'today',    label: 'Hoy',       Icon: Sun },
+  { id: 'today',    label: 'Hoy',      Icon: Sun },
   { id: 'calendar', label: 'Calendario', Icon: CalendarDays },
-  { id: 'products', label: 'Productos',  Icon: Package },
-  { id: 'rules',    label: 'Reglas',     Icon: BookOpen },
-  { id: 'settings', label: 'Config',     Icon: Settings },
+  { id: 'planner',  label: 'Plan',     Icon: Sparkles },
+  { id: 'products', label: 'Productos', Icon: Package },
+  { id: 'rules',    label: 'Reglas',   Icon: BookOpen },
+  { id: 'settings', label: 'Config',   Icon: Settings },
 ]
 
 export function BottomNav() {

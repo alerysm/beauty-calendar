@@ -9,8 +9,11 @@ import {
   PRODUCT_COLORS,
   FrequencyType,
   UsageTime,
+  CustomRule,
+  ProductSchedule,
 } from '../types'
 import { validateDayProducts } from '../utils/rulesEngine'
+import { schedulesToCalendar } from '../utils/recommendationEngine'
 import { exportToJSON, importFromJSON } from '../utils/storage'
 
 // ─── Default products ─────────────────────────────────────────────────────────
@@ -122,6 +125,7 @@ interface AppStore {
   calendar: CalendarData
   settings: AppSettings
   activeTab: TabType
+  customRules: CustomRule[]
 
   // Product actions
   addProduct: (product: Omit<Product, 'id'>) => void
@@ -140,12 +144,17 @@ interface AppStore {
     productId: string,
     time: 'morning' | 'night',
   ) => { applied: number; skipped: number }
+  applyMonthlyPlan: (yearMonth: string, schedules: ProductSchedule[]) => void
   moveProduct: (
     fromDate: string,
     toDate: string,
     productId: string,
     time: 'morning' | 'night',
   ) => ReturnType<typeof validateDayProducts>
+
+  // Custom rules
+  addCustomRule: (rule: Omit<CustomRule, 'id'>) => void
+  deleteCustomRule: (id: string) => void
 
   // Settings
   updateSettings: (updates: Partial<AppSettings>) => void
@@ -165,6 +174,7 @@ export const useStore = create<AppStore>()(
       calendar: {},
       settings: DEFAULT_SETTINGS,
       activeTab: 'today',
+      customRules: [],
 
       addProduct: (product) => {
         const id = `product-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -196,8 +206,8 @@ export const useStore = create<AppStore>()(
       },
 
       addProductToDay: (dateStr, productId, time) => {
-        const { calendar, products } = get()
-        const result = validateDayProducts(dateStr, productId, time, calendar, products)
+        const { calendar, products, customRules } = get()
+        const result = validateDayProducts(dateStr, productId, time, calendar, products, customRules)
 
         if (result.valid) {
           set(state => {
@@ -236,7 +246,7 @@ export const useStore = create<AppStore>()(
       addProductToMonth: (yearMonth, productId, time) => {
         const [year, month] = yearMonth.split('-').map(Number)
         const daysInMonth = new Date(year, month, 0).getDate()
-        const { calendar, products } = get()
+        const { calendar, products, customRules } = get()
 
         let applied = 0
         let skipped = 0
@@ -244,7 +254,7 @@ export const useStore = create<AppStore>()(
 
         for (let day = 1; day <= daysInMonth; day++) {
           const dateStr = `${yearMonth}-${String(day).padStart(2, '0')}`
-          const result = validateDayProducts(dateStr, productId, time, newCalendar, products)
+          const result = validateDayProducts(dateStr, productId, time, newCalendar, products, customRules)
           if (result.valid) {
             const entry = newCalendar[dateStr] ?? { date: dateStr, morning: [], night: [] }
             newCalendar[dateStr] = {
@@ -261,9 +271,24 @@ export const useStore = create<AppStore>()(
         return { applied, skipped }
       },
 
+      applyMonthlyPlan: (yearMonth, schedules) => {
+        const entries = schedulesToCalendar(yearMonth, schedules)
+        set(state => {
+          // Remove existing entries for this month, then apply new ones
+          const newCalendar: CalendarData = {}
+          for (const [date, entry] of Object.entries(state.calendar)) {
+            if (!date.startsWith(yearMonth)) newCalendar[date] = entry
+          }
+          for (const [date, entry] of Object.entries(entries)) {
+            newCalendar[date] = entry
+          }
+          return { calendar: newCalendar }
+        })
+      },
+
       moveProduct: (fromDate, toDate, productId, time) => {
-        const { calendar, products } = get()
-        const result = validateDayProducts(toDate, productId, time, calendar, products)
+        const { calendar, products, customRules } = get()
+        const result = validateDayProducts(toDate, productId, time, calendar, products, customRules)
 
         if (result.valid) {
           set(state => {
@@ -286,6 +311,15 @@ export const useStore = create<AppStore>()(
         }
 
         return result
+      },
+
+      addCustomRule: (rule) => {
+        const id = `rule-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        set(state => ({ customRules: [...state.customRules, { ...rule, id }] }))
+      },
+
+      deleteCustomRule: (id) => {
+        set(state => ({ customRules: state.customRules.filter(r => r.id !== id) }))
       },
 
       updateSettings: (updates) => {
@@ -311,7 +345,7 @@ export const useStore = create<AppStore>()(
       },
 
       resetData: () => {
-        set({ products: DEFAULT_PRODUCTS, calendar: {}, settings: DEFAULT_SETTINGS })
+        set({ products: DEFAULT_PRODUCTS, calendar: {}, settings: DEFAULT_SETTINGS, customRules: [] })
       },
     }),
     {
@@ -321,7 +355,8 @@ export const useStore = create<AppStore>()(
 )
 
 // ─── Typed selectors ──────────────────────────────────────────────────────────
-export const useProducts  = () => useStore(s => s.products)
-export const useCalendar  = () => useStore(s => s.calendar)
-export const useSettings  = () => useStore(s => s.settings)
-export const useActiveTab = () => useStore(s => s.activeTab)
+export const useProducts    = () => useStore(s => s.products)
+export const useCalendar    = () => useStore(s => s.calendar)
+export const useSettings    = () => useStore(s => s.settings)
+export const useActiveTab   = () => useStore(s => s.activeTab)
+export const useCustomRules = () => useStore(s => s.customRules)

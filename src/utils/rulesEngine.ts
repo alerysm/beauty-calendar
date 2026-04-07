@@ -4,6 +4,7 @@ import {
   CalendarData,
   ValidationResult,
   ValidationError,
+  CustomRule,
 } from '../types'
 import {
   startOfWeek,
@@ -67,6 +68,7 @@ export function validateDayProducts(
   time: 'morning' | 'night',
   calendar: CalendarData,
   products: Product[],
+  customRules: CustomRule[] = [],
 ): ValidationResult {
   const errors: ValidationError[] = []
   const newProduct = products.find(p => p.id === newProductId)
@@ -78,7 +80,7 @@ export function validateDayProducts(
     ...(entry?.night   ?? []),
   ]
 
-  // 1. Conflict check
+  // 1. Built-in conflict check
   const conflicts = CONFLICTS[newProduct.type] ?? []
   for (const conflictType of conflicts) {
     const conflicting = products.find(p => dayProducts.includes(p.id) && p.type === conflictType)
@@ -91,7 +93,7 @@ export function validateDayProducts(
     }
   }
 
-  // 2. Weekly limit check
+  // 2. Built-in weekly limit check
   const limit = WEEKLY_LIMITS[newProduct.type]
   if (limit !== undefined) {
     const used = countWeeklyUsage(newProductId, dateStr, calendar)
@@ -110,6 +112,35 @@ export function validateDayProducts(
       code: 'DUPLICATE',
       message: `${newProduct.name} ya está en tu rutina de ${time === 'morning' ? 'mañana' : 'noche'} de este día`,
     })
+  }
+
+  // 4. Custom conflict rules
+  for (const rule of customRules) {
+    if (rule.type !== 'conflict' || !rule.productAId || !rule.productBId) continue
+    const isA = rule.productAId === newProductId
+    const isB = rule.productBId === newProductId
+    if (!isA && !isB) continue
+    const otherId = isA ? rule.productBId : rule.productAId
+    if (dayProducts.includes(otherId)) {
+      const other = products.find(p => p.id === otherId)
+      errors.push({
+        code: 'CONFLICT',
+        message: `No puedes aplicar ${newProduct.name} el mismo día que ${other?.name ?? otherId}`,
+        affectedProducts: [newProductId, otherId],
+      })
+    }
+  }
+
+  // 5. Custom weekly limit rules
+  for (const rule of customRules) {
+    if (rule.type !== 'limit' || rule.productId !== newProductId || !rule.maxPerWeek) continue
+    const used = countWeeklyUsage(newProductId, dateStr, calendar)
+    if (used >= rule.maxPerWeek) {
+      errors.push({
+        code: 'WEEKLY_LIMIT',
+        message: `${newProduct.name} solo puede usarse ${rule.maxPerWeek} vez${rule.maxPerWeek > 1 ? 'es' : ''} por semana (regla personalizada).`,
+      })
+    }
   }
 
   const suggestedDays = errors.length > 0

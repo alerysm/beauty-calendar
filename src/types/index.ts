@@ -54,7 +54,25 @@ export interface AppSettings {
   notificationsPermission: boolean
 }
 
-export type TabType = 'today' | 'calendar' | 'products' | 'rules' | 'settings'
+export type TabType = 'today' | 'calendar' | 'planner' | 'products' | 'rules' | 'settings'
+
+export interface ProductSchedule {
+  productId: string
+  daysOfWeek: number[] // 0=Lun … 6=Dom
+  time: UsageTime
+}
+
+export interface CustomRule {
+  id: string
+  type: 'conflict' | 'limit'
+  description: string
+  // conflict
+  productAId?: string
+  productBId?: string
+  // limit
+  productId?: string
+  maxPerWeek?: number
+}
 
 export interface ProductRule {
   type: ProductType
