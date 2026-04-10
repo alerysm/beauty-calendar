@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Bell, BellOff, Download, Upload, Trash2, Moon, ChevronRight, Info } from 'lucide-react'
+import { Bell, BellOff, Download, Upload, Trash2, ChevronRight, Info, Smartphone } from 'lucide-react'
 import { useStore, useSettings } from '../store/useStore'
 import { useToast } from '../components/UI/Toast'
 import { downloadJSON, readJSONFile } from '../utils/storage'
@@ -13,6 +13,10 @@ export function SettingsPage() {
 
   const notifStatus = getNotificationStatus()
   const [requestingNotif, setRequestingNotif] = useState(false)
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+  const isIOS     = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  const isAndroid = /Android/.test(navigator.userAgent)
 
   const handleRequestNotifications = async () => {
     setRequestingNotif(true)
@@ -81,14 +85,14 @@ export function SettingsPage() {
             </div>
             <div className="flex-1">
               <p className="text-white text-sm font-medium">
-                {notifStatus === 'granted' ? 'Notificaciones activas' :
-                 notifStatus === 'denied'  ? 'Notificaciones bloqueadas' :
-                 notifStatus === 'unsupported' ? 'No disponible' :
+                {notifStatus === 'granted'     ? 'Notificaciones activas' :
+                 notifStatus === 'denied'       ? 'Notificaciones bloqueadas' :
+                 notifStatus === 'unsupported'  ? 'No disponible en este navegador' :
                  'Notificaciones desactivadas'}
               </p>
               <p className="text-zinc-500 text-xs">
                 {notifStatus === 'denied'
-                  ? 'Ve a Configuración del sistema para activarlas'
+                  ? 'Debes activarlas manualmente desde el navegador'
                   : 'Recordatorio de tu rutina diaria'}
               </p>
             </div>
@@ -103,6 +107,37 @@ export function SettingsPage() {
               </button>
             )}
           </div>
+
+          {/* Blocked: platform-specific unblock steps */}
+          {notifStatus === 'denied' && (
+            <div className="mx-0 mt-0 px-4 py-3 bg-amber-950/30 border-t border-amber-800/20">
+              <p className="text-amber-400 text-xs font-semibold mb-2">
+                Cómo desbloquearlas:
+              </p>
+              {isIOS ? (
+                <ol className="text-zinc-400 text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>Abre <span className="text-zinc-200">Ajustes</span> del iPhone</li>
+                  <li>Busca y toca <span className="text-zinc-200">Safari</span></li>
+                  <li>Ve a <span className="text-zinc-200">Configuración de sitios web → Notificaciones</span></li>
+                  <li>Busca esta app y selecciona <span className="text-zinc-200">Permitir</span></li>
+                </ol>
+              ) : isAndroid ? (
+                <ol className="text-zinc-400 text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>Toca el icono <span className="text-zinc-200">🔒</span> en la barra de direcciones de Chrome</li>
+                  <li>Toca <span className="text-zinc-200">Permisos del sitio</span></li>
+                  <li>Toca <span className="text-zinc-200">Notificaciones → Permitir</span></li>
+                  <li>Recarga la página</li>
+                </ol>
+              ) : (
+                <ol className="text-zinc-400 text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>Haz clic en el icono <span className="text-zinc-200">🔒</span> en la barra de direcciones</li>
+                  <li>Selecciona <span className="text-zinc-200">Permisos del sitio</span></li>
+                  <li>Cambia <span className="text-zinc-200">Notificaciones</span> a <span className="text-zinc-200">Permitir</span></li>
+                  <li>Recarga la página</li>
+                </ol>
+              )}
+            </div>
+          )}
 
           {/* Morning */}
           <ToggleRow
@@ -205,16 +240,53 @@ export function SettingsPage() {
           </div>
         </Section>
 
-        {/* iOS install hint */}
-        <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
-          <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-2">
-            Instalar en iOS
-          </p>
-          <p className="text-zinc-500 text-xs leading-relaxed">
-            En Safari: toca el botón Compartir → "Añadir a pantalla de inicio"
-            para instalar la app y recibir notificaciones.
-          </p>
-        </div>
+        {/* Install guide */}
+        {!isStandalone && (
+          <div>
+            <p className="text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-3 px-1 flex items-center gap-2">
+              <Smartphone size={13} />
+              Instalar la app
+            </p>
+            <div className="space-y-3">
+
+              {/* iOS */}
+              <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                <p className="text-zinc-300 text-xs font-semibold mb-2">iPhone / iPad (Safari)</p>
+                <ol className="text-zinc-500 text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>Abre esta página en <span className="text-zinc-300">Safari</span> (no Chrome)</li>
+                  <li>Toca el botón <span className="text-zinc-300">Compartir</span> (□↑) en la barra inferior</li>
+                  <li>Selecciona <span className="text-zinc-300">"Añadir a pantalla de inicio"</span></li>
+                  <li>Confirma tocando <span className="text-zinc-300">Añadir</span></li>
+                </ol>
+                <p className="text-zinc-600 text-xs mt-2 leading-relaxed">
+                  Las notificaciones solo funcionan desde la app instalada, no desde el navegador.
+                </p>
+              </div>
+
+              {/* Android */}
+              <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl">
+                <p className="text-zinc-300 text-xs font-semibold mb-2">Android (Chrome)</p>
+                <ol className="text-zinc-500 text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                  <li>Abre esta página en <span className="text-zinc-300">Chrome</span></li>
+                  <li>Toca el menú <span className="text-zinc-300">⋮</span> (esquina superior derecha)</li>
+                  <li>Selecciona <span className="text-zinc-300">"Añadir a pantalla de inicio"</span> o <span className="text-zinc-300">"Instalar app"</span></li>
+                  <li>Confirma tocando <span className="text-zinc-300">Instalar</span></li>
+                </ol>
+                <p className="text-zinc-600 text-xs mt-2 leading-relaxed">
+                  Chrome puede mostrar automáticamente un banner de instalación en la parte inferior.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {isStandalone && (
+          <div className="flex items-center gap-3 p-4 bg-green-950/40 border border-green-800/30 rounded-2xl">
+            <Smartphone size={16} className="text-green-400 shrink-0" />
+            <p className="text-green-400 text-xs">App instalada en este dispositivo</p>
+          </div>
+        )}
       </div>
     </div>
   )
