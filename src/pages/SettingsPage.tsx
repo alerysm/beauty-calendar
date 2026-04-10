@@ -170,7 +170,7 @@ export function SettingsPage() {
         {/* About */}
         <Section title="Acerca de">
           <div className="px-4 py-3 space-y-2">
-            <InfoRow label="Versión" value="1.0.0" />
+            <InfoRow label="Versión" value="1.5.0" />
             <InfoRow label="Almacenamiento" value="Local (dispositivo)" />
             <InfoRow label="Backend" value="Sin servidor" />
           </div>
