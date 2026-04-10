@@ -25,10 +25,6 @@ export const BUILTIN_CUSTOM_RULES: CustomRule[] = [
   { id: 'builtin-c4', isBuiltIn: true, type: 'conflict', description: 'Retinol + Dermaplaning',               productAId: 'default-retinol',      productBId: 'default-dermaplaning' },
   { id: 'builtin-c5', isBuiltIn: true, type: 'conflict', description: 'Retinol + Máscara AHA-BHA-PHA',        productAId: 'default-retinol',      productBId: 'default-mask' },
   { id: 'builtin-c6', isBuiltIn: true, type: 'conflict', description: 'Dermaplaning + Máscara AHA-BHA-PHA',   productAId: 'default-dermaplaning', productBId: 'default-mask' },
-  // ── Frecuencia ────────────────────────────────────────────────────────────
-  { id: 'builtin-l1', isBuiltIn: true, type: 'limit', description: 'Máscara AHA-BHA-PHA — 2 veces/sem',  productId: 'default-mask',      periodicity: 'twice_week' },
-  { id: 'builtin-l2', isBuiltIn: true, type: 'limit', description: 'Ácido Glicólico — 2 veces/sem',      productId: 'default-glycolic',  periodicity: 'twice_week' },
-  { id: 'builtin-l3', isBuiltIn: true, type: 'limit', description: 'Aceite Limpiador — 1 vez/sem',       productId: 'default-cleansing', periodicity: 'once_week' },
   // ── Restricción de horario ────────────────────────────────────────────────
   { id: 'builtin-t1', isBuiltIn: true, type: 'time', description: 'Retinol — Solo noche',              productId: 'default-retinol',  allowedTime: 'night' },
   { id: 'builtin-t2', isBuiltIn: true, type: 'time', description: 'Máscara AHA-BHA-PHA — Solo noche',  productId: 'default-mask',     allowedTime: 'night' },
@@ -70,7 +66,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     id: 'default-dermaplaning',
     name: 'Dermaplaning',
     type: 'dermaplaning',
-    frequency: 'weekly_1',
+    frequency: 'monthly',
     usage: 'morning',
     color: PRODUCT_COLORS.dermaplaning,
     isDefault: true,

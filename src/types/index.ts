@@ -12,7 +12,17 @@ export type ProductType =
 
 export type UsageTime = 'morning' | 'night' | 'both'
 
-export type FrequencyType = 'daily' | 'weekly_1' | 'weekly_2' | 'weekly_3' | 'as_needed'
+export type FrequencyType =
+  | 'daily'
+  | 'weekly_6'
+  | 'weekly_5'
+  | 'weekly_4'
+  | 'weekly_3'
+  | 'weekly_2'
+  | 'weekly_1'
+  | 'biweekly'   // cada 2 semanas (quincenal)
+  | 'monthly'    // una vez al mes
+  | 'as_needed'
 
 export interface Product {
   id: string
@@ -58,8 +68,9 @@ export type TabType = 'today' | 'calendar' | 'planner' | 'products' | 'rules' | 
 
 export interface ProductSchedule {
   productId: string
-  daysOfWeek: number[] // 0=Lun … 6=Dom
+  daysOfWeek: number[]   // 0=Lun … 6=Dom
   time: UsageTime
+  weeksOfMonth?: number[] // 0-indexed weeks (0-4); absent = every week
 }
 
 export type RulePeriodicityType =
@@ -153,8 +164,13 @@ export const PRODUCT_LABELS: Record<ProductType, string> = {
 
 export const FREQUENCY_LABELS: Record<FrequencyType, string> = {
   daily:     'Diario',
-  weekly_1:  '1 vez por semana',
-  weekly_2:  '2 veces por semana',
+  weekly_6:  '6 veces por semana',
+  weekly_5:  '5 veces por semana',
+  weekly_4:  '4 veces por semana',
   weekly_3:  '3 veces por semana',
+  weekly_2:  '2 veces por semana',
+  weekly_1:  '1 vez por semana',
+  biweekly:  'Quincenal (c/2 semanas)',
+  monthly:   '1 vez al mes',
   as_needed: 'Según necesidad',
 }
