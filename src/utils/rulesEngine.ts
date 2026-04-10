@@ -1,12 +1,14 @@
 import {
   Product,
   ProductType,
+  FrequencyType,
   CalendarData,
   ValidationResult,
   ValidationError,
   CustomRule,
   RulePeriodicityType,
   PERIODICITY_LABELS,
+  FREQUENCY_LABELS,
 } from '../types'
 import {
   startOfWeek,
@@ -20,7 +22,7 @@ import {
   differenceInDays,
 } from 'date-fns'
 
-// ─── Conflict map ────────────────────────────────────────────────────────────
+// ─── Conflict map (fallback for non-default products) ────────────────────────
 const CONFLICTS: Partial<Record<ProductType, ProductType[]>> = {
   azelaic_acid:     ['retinol', 'dermaplaning', 'aha_bha_pha_mask'],
   retinol:          ['azelaic_acid', 'dermaplaning', 'aha_bha_pha_mask'],
@@ -28,11 +30,18 @@ const CONFLICTS: Partial<Record<ProductType, ProductType[]>> = {
   aha_bha_pha_mask: ['azelaic_acid', 'retinol', 'dermaplaning'],
 }
 
-// Max uses per week
-const WEEKLY_LIMITS: Partial<Record<ProductType, number>> = {
-  aha_bha_pha_mask: 2,
-  glycolic_acid:    2,
-  cleansing_oil:    1,
+// Maps Product.frequency to the equivalent RulePeriodicityType for enforcement
+const FREQUENCY_TO_PERIODICITY: Partial<Record<FrequencyType, RulePeriodicityType>> = {
+  daily:    'daily',
+  weekly_6: 'six_week',
+  weekly_5: 'five_week',
+  weekly_4: 'four_week',
+  weekly_3: 'three_week',
+  weekly_2: 'twice_week',
+  weekly_1: 'once_week',
+  biweekly: 'once_two_weeks',
+  monthly:  'once_month',
+  // as_needed → no limit
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -158,18 +167,17 @@ export function validateDayProducts(
     }
   }
 
-  // 2. Built-in weekly limit check (skipped for the same reason)
-  const hasCustomLimitCoverage = customRules.some(
-    r => r.type === 'limit' && r.productId === newProductId,
-  )
-  if (!hasCustomLimitCoverage) {
-    const limit = WEEKLY_LIMITS[newProduct.type]
-    if (limit !== undefined) {
-      const used = countWeeklyUsage(newProductId, dateStr, calendar)
+  // 2. Product frequency limit — automatic enforcement from Product.frequency.
+  //    A custom 'limit' rule overrides this (acts as an exception).
+  const hasLimitOverride = customRules.some(r => r.type === 'limit' && r.productId === newProductId)
+  if (!hasLimitOverride) {
+    const periodicity = FREQUENCY_TO_PERIODICITY[newProduct.frequency]
+    if (periodicity) {
+      const { used, limit } = checkPeriodicity(newProductId, dateStr, calendar, periodicity)
       if (used >= limit) {
         errors.push({
-          code: 'WEEKLY_LIMIT',
-          message: `${newProduct.name} solo puede usarse ${limit} vez${limit > 1 ? 'es' : ''} por semana. Ya lo usaste ${used} vez${used > 1 ? 'es' : ''} esta semana.`,
+          code: 'FREQUENCY_LIMIT',
+          message: `${newProduct.name}: ${FREQUENCY_LABELS[newProduct.frequency]}. Ya lo usaste ${used} vez${used > 1 ? 'es' : ''} este período.`,
         })
       }
     }
@@ -284,23 +292,6 @@ export function suggestAvailableDays(
   }
 
   return suggestions
-}
-
-// ─── Check weekly limit ───────────────────────────────────────────────────────
-export function checkWeeklyLimit(
-  productId: string,
-  dateStr: string,
-  calendar: CalendarData,
-  products: Product[],
-): { exceeded: boolean; used: number; limit: number | null } {
-  const product = products.find(p => p.id === productId)
-  if (!product) return { exceeded: false, used: 0, limit: null }
-
-  const limit = WEEKLY_LIMITS[product.type] ?? null
-  if (limit === null) return { exceeded: false, used: 0, limit: null }
-
-  const used = countWeeklyUsage(productId, dateStr, calendar)
-  return { exceeded: used >= limit, used, limit }
 }
 
 // ─── Get conflicts for a day ──────────────────────────────────────────────────

@@ -2,8 +2,12 @@
 // Serves static assets and adds cache-control headers for files that must
 // never be cached at the edge so browsers always pick up new deployments.
 
+interface Env {
+  ASSETS: { fetch: (request: Request) => Promise<Response> }
+}
+
 export default {
-  async fetch(request: Request, env: { ASSETS: Fetcher }): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
     const response = await env.ASSETS.fetch(request)
 

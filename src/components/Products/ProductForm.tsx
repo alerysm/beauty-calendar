@@ -24,9 +24,14 @@ const USAGE_OPTIONS: { value: UsageTime; label: string }[] = [
 
 const FREQUENCY_OPTIONS: { value: FrequencyType; label: string }[] = [
   { value: 'daily',     label: 'Diario' },
-  { value: 'weekly_1',  label: '1 vez / semana' },
-  { value: 'weekly_2',  label: '2 veces / semana' },
-  { value: 'weekly_3',  label: '3 veces / semana' },
+  { value: 'weekly_6',  label: '6×/semana' },
+  { value: 'weekly_5',  label: '5×/semana' },
+  { value: 'weekly_4',  label: '4×/semana' },
+  { value: 'weekly_3',  label: '3×/semana' },
+  { value: 'weekly_2',  label: '2×/semana' },
+  { value: 'weekly_1',  label: '1×/semana' },
+  { value: 'biweekly',  label: 'Quincenal' },
+  { value: 'monthly',   label: '1×/mes' },
   { value: 'as_needed', label: 'Según necesidad' },
 ]
 
@@ -121,47 +126,47 @@ export function ProductForm({ open, onClose, product }: ProductFormProps) {
           />
         </div>
 
-        {/* Usage & Frequency */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              Uso
-            </label>
-            <div className="space-y-1.5">
-              {USAGE_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setUsage(opt.value)}
-                  className={`w-full px-3 py-2 rounded-xl text-sm font-medium transition-all
-                    ${usage === opt.value
-                      ? 'bg-skin-400/20 text-skin-300 border border-skin-400/40'
-                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                    }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        {/* Usage */}
+        <div>
+          <label className="block text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            Uso
+          </label>
+          <div className="flex gap-2">
+            {USAGE_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setUsage(opt.value)}
+                className={`flex-1 px-3 py-2 rounded-xl text-sm font-medium transition-all
+                  ${usage === opt.value
+                    ? 'bg-skin-400/20 text-skin-300 border border-skin-400/40'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-          <div>
-            <label className="block text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-2">
-              Frecuencia
-            </label>
-            <div className="space-y-1.5">
-              {FREQUENCY_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setFrequency(opt.value)}
-                  className={`w-full px-3 py-2 rounded-xl text-sm font-medium transition-all
-                    ${frequency === opt.value
-                      ? 'bg-skin-400/20 text-skin-300 border border-skin-400/40'
-                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                    }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        </div>
+
+        {/* Frequency */}
+        <div>
+          <label className="block text-zinc-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            Frecuencia
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {FREQUENCY_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setFrequency(opt.value)}
+                className={`px-3 py-2 rounded-xl text-sm font-medium transition-all
+                  ${frequency === opt.value
+                    ? 'bg-skin-400/20 text-skin-300 border border-skin-400/40'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
 

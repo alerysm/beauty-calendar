@@ -6,12 +6,23 @@ const CONFLICT_GROUP = ['azelaic_acid', 'retinol', 'dermaplaning', 'aha_bha_pha_
 function getDaysNeeded(frequency: FrequencyType): number {
   switch (frequency) {
     case 'daily':    return 7
+    case 'weekly_6': return 6
+    case 'weekly_5': return 5
+    case 'weekly_4': return 4
     case 'weekly_3': return 3
     case 'weekly_2': return 2
     case 'weekly_1': return 1
+    case 'biweekly': return 1 // 1 day/week, limited by weeksOfMonth
+    case 'monthly':  return 1 // 1 day/week, limited by weeksOfMonth
     case 'as_needed':return 1
-    default:         return 1
   }
+}
+
+/** Returns which weeks of the month (0-indexed) a product should be used, or undefined for every week */
+function getWeeksOfMonth(frequency: FrequencyType): number[] | undefined {
+  if (frequency === 'biweekly') return [0, 2] // weeks 1 & 3 ≈ every 2 weeks
+  if (frequency === 'monthly')  return [0]    // week 1 only
+  return undefined
 }
 
 /** Pick `needed` indices spread evenly across `available` days */
@@ -50,7 +61,10 @@ export function generateRecommendation(
   const conflictSelected = selected.filter(p => CONFLICT_GROUP.includes(p.type))
 
   // Sort lowest frequency first so most-constrained gets first pick of days
-  const freqOrder: FrequencyType[] = ['weekly_1', 'weekly_2', 'weekly_3', 'as_needed', 'daily']
+  const freqOrder: FrequencyType[] = [
+    'monthly', 'biweekly', 'weekly_1', 'weekly_2', 'weekly_3',
+    'weekly_4', 'weekly_5', 'weekly_6', 'as_needed', 'daily',
+  ]
   conflictSelected.sort(
     (a, b) => freqOrder.indexOf(a.frequency) - freqOrder.indexOf(b.frequency),
   )
@@ -61,7 +75,12 @@ export function generateRecommendation(
     const needed    = getDaysNeeded(p.frequency)
     const assigned  = spreadEvenly(available, Math.min(needed, available.length))
     assigned.forEach(d => usedDays.add(d))
-    schedules.push({ productId: p.id, daysOfWeek: assigned, time: p.usage })
+    schedules.push({
+      productId: p.id,
+      daysOfWeek: assigned,
+      time: p.usage,
+      weeksOfMonth: getWeeksOfMonth(p.frequency),
+    })
   }
 
   // ── 3. Custom-conflict groups ────────────────────────────────────────────────
@@ -92,7 +111,12 @@ export function generateRecommendation(
     const available  = [0, 1, 2, 3, 4, 5, 6].filter(d => !blocked.has(d))
     const needed     = getDaysNeeded(p.frequency)
     const assigned   = spreadEvenly(available, Math.min(needed, available.length))
-    schedules.push({ productId: p.id, daysOfWeek: assigned, time: p.usage })
+    schedules.push({
+      productId: p.id,
+      daysOfWeek: assigned,
+      time: p.usage,
+      weeksOfMonth: getWeeksOfMonth(p.frequency),
+    })
   }
 
   return schedules
@@ -120,6 +144,10 @@ export function schedulesToCalendar(
 
     for (const s of schedules) {
       if (!s.daysOfWeek.includes(dayOfWeek)) continue
+      if (s.weeksOfMonth) {
+        const weekOfMonth = Math.floor((day - 1) / 7)
+        if (!s.weeksOfMonth.includes(weekOfMonth)) continue
+      }
       if ((s.time === 'morning' || s.time === 'both') && !morning.includes(s.productId))
         morning.push(s.productId)
       if ((s.time === 'night' || s.time === 'both') && !night.includes(s.productId))

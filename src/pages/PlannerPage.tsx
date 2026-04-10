@@ -15,18 +15,12 @@ import { format, addMonths, subMonths, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useProducts, useCustomRules, useStore } from '../store/useStore'
 import { generateRecommendation } from '../utils/recommendationEngine'
-import { ProductSchedule, FrequencyType } from '../types'
+import { ProductSchedule, FREQUENCY_LABELS } from '../types'
 import { useToast } from '../components/UI/Toast'
 
 const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 
-const FREQ_LABEL: Record<FrequencyType, string> = {
-  daily:     'Diario',
-  weekly_3:  '3×/sem',
-  weekly_2:  '2×/sem',
-  weekly_1:  '1×/sem',
-  as_needed: 'S/necesidad',
-}
+const FREQ_LABEL = FREQUENCY_LABELS
 
 function toYearMonth(date: Date) {
   return format(date, 'yyyy-MM')
