@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { Sun, Moon, AlertTriangle, Plus, ChevronRight, Sparkles } from 'lucide-react'
-import { useProducts, useCalendar } from '../store/useStore'
+import { useProducts, useCalendar, useCustomRules } from '../store/useStore'
 import { DayModal } from '../components/Calendar/DayModal'
 import { getDayConflicts } from '../utils/rulesEngine'
 import { toDateStr, formatDisplay, formatDayName, format, es } from '../utils/dateUtils'
 import { Product } from '../types'
 
 export function TodayPage() {
-  const products = useProducts()
-  const calendar = useCalendar()
+  const products    = useProducts()
+  const calendar    = useCalendar()
+  const customRules = useCustomRules()
 
   const today = toDateStr(new Date())
   const entry = calendar[today] ?? { date: today, morning: [], night: [] }
-  const conflicts = getDayConflicts(today, calendar, products)
+  const conflicts = getDayConflicts(today, calendar, products, customRules)
 
   const [showDayModal, setShowDayModal] = useState(false)
 

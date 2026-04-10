@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useProducts, useCalendar } from '../../store/useStore'
+import { useProducts, useCalendar, useCustomRules } from '../../store/useStore'
 import { DayModal } from './DayModal'
 import {
   getMonthDays,
@@ -20,8 +20,9 @@ export function MonthView() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  const products = useProducts()
-  const calendar = useCalendar()
+  const products    = useProducts()
+  const calendar    = useCalendar()
+  const customRules = useCustomRules()
 
   const year  = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -65,7 +66,7 @@ export function MonthView() {
           const today      = isToday(day)
           const entry      = calendar[dateStr]
           const allIds     = [...(entry?.morning ?? []), ...(entry?.night ?? [])]
-          const hasConflict = getDayConflicts(dateStr, calendar, products).length > 0
+          const hasConflict = getDayConflicts(dateStr, calendar, products, customRules).length > 0
 
           // Unique colors for dots
           const dotColors = [...new Set(

@@ -17,6 +17,7 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
   const products   = useProducts()
   const calendar   = useCalendar()
   const { addProductToDay, removeProductFromDay, addProductToMonth } = useStore()
+  const customRules = useStore(s => s.customRules)
   const { showToast } = useToast()
 
   const [validation, setValidation] = useState<ValidationResult | null>(null)
@@ -27,7 +28,7 @@ export function DayModal({ dateStr, onClose }: DayModalProps) {
   if (!dateStr) return null
 
   const entry = calendar[dateStr] ?? { date: dateStr, morning: [], night: [] }
-  const conflicts = getDayConflicts(dateStr, calendar, products)
+  const conflicts = getDayConflicts(dateStr, calendar, products, customRules)
 
   const getProduct = (id: string) => products.find(p => p.id === id)
 

@@ -62,16 +62,58 @@ export interface ProductSchedule {
   time: UsageTime
 }
 
+export type RulePeriodicityType =
+  | 'once_week'
+  | 'twice_week'
+  | 'three_week'
+  | 'four_week'
+  | 'five_week'
+  | 'six_week'
+  | 'daily'
+  | 'once_two_weeks'
+  | 'once_month'
+
+export const PERIODICITY_LABELS: Record<RulePeriodicityType, string> = {
+  once_week:      '1 vez por semana',
+  twice_week:     '2 veces por semana',
+  three_week:     '3 veces por semana',
+  four_week:      '4 veces por semana',
+  five_week:      '5 veces por semana',
+  six_week:       '6 veces por semana',
+  daily:          'Diario (todos los días)',
+  once_two_weeks: 'Quincenal (c/2 semanas)',
+  once_month:     '1 vez al mes',
+}
+
+export const PERIODICITY_SHORT: Record<RulePeriodicityType, string> = {
+  once_week:      '1×/sem',
+  twice_week:     '2×/sem',
+  three_week:     '3×/sem',
+  four_week:      '4×/sem',
+  five_week:      '5×/sem',
+  six_week:       '6×/sem',
+  daily:          'Diario',
+  once_two_weeks: 'Quincenal',
+  once_month:     '1×/mes',
+}
+
 export interface CustomRule {
   id: string
-  type: 'conflict' | 'limit'
+  type: 'conflict' | 'limit' | 'time' | 'rest'
   description: string
-  // conflict
+  isBuiltIn?: boolean
+  // conflict & rest share productAId / productBId
   productAId?: string
   productBId?: string
-  // limit
+  // limit & time share productId
   productId?: string
-  maxPerWeek?: number
+  // limit
+  maxPerWeek?: number        // legacy — kept for stored data compatibility
+  periodicity?: RulePeriodicityType
+  // time  (solo mañana / solo noche)
+  allowedTime?: 'morning' | 'night'
+  // rest  (días mínimos de espera tras usar productAId antes de productBId)
+  minDays?: number
 }
 
 export interface ProductRule {

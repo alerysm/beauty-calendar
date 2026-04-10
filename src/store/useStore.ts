@@ -16,6 +16,34 @@ import { validateDayProducts } from '../utils/rulesEngine'
 import { schedulesToCalendar } from '../utils/recommendationEngine'
 import { exportToJSON, importFromJSON } from '../utils/storage'
 
+// ─── Built-in rules (seeded into the store, fully editable) ──────────────────
+export const BUILTIN_CUSTOM_RULES: CustomRule[] = [
+  // ── Conflictos mismo día ──────────────────────────────────────────────────
+  { id: 'builtin-c1', isBuiltIn: true, type: 'conflict', description: 'Ácido Azelaico + Retinol',             productAId: 'default-azelaic',      productBId: 'default-retinol' },
+  { id: 'builtin-c2', isBuiltIn: true, type: 'conflict', description: 'Ácido Azelaico + Dermaplaning',        productAId: 'default-azelaic',      productBId: 'default-dermaplaning' },
+  { id: 'builtin-c3', isBuiltIn: true, type: 'conflict', description: 'Ácido Azelaico + Máscara AHA-BHA-PHA', productAId: 'default-azelaic',      productBId: 'default-mask' },
+  { id: 'builtin-c4', isBuiltIn: true, type: 'conflict', description: 'Retinol + Dermaplaning',               productAId: 'default-retinol',      productBId: 'default-dermaplaning' },
+  { id: 'builtin-c5', isBuiltIn: true, type: 'conflict', description: 'Retinol + Máscara AHA-BHA-PHA',        productAId: 'default-retinol',      productBId: 'default-mask' },
+  { id: 'builtin-c6', isBuiltIn: true, type: 'conflict', description: 'Dermaplaning + Máscara AHA-BHA-PHA',   productAId: 'default-dermaplaning', productBId: 'default-mask' },
+  // ── Frecuencia ────────────────────────────────────────────────────────────
+  { id: 'builtin-l1', isBuiltIn: true, type: 'limit', description: 'Máscara AHA-BHA-PHA — 2 veces/sem',  productId: 'default-mask',      periodicity: 'twice_week' },
+  { id: 'builtin-l2', isBuiltIn: true, type: 'limit', description: 'Ácido Glicólico — 2 veces/sem',      productId: 'default-glycolic',  periodicity: 'twice_week' },
+  { id: 'builtin-l3', isBuiltIn: true, type: 'limit', description: 'Aceite Limpiador — 1 vez/sem',       productId: 'default-cleansing', periodicity: 'once_week' },
+  // ── Restricción de horario ────────────────────────────────────────────────
+  { id: 'builtin-t1', isBuiltIn: true, type: 'time', description: 'Retinol — Solo noche',              productId: 'default-retinol',  allowedTime: 'night' },
+  { id: 'builtin-t2', isBuiltIn: true, type: 'time', description: 'Máscara AHA-BHA-PHA — Solo noche',  productId: 'default-mask',     allowedTime: 'night' },
+  { id: 'builtin-t3', isBuiltIn: true, type: 'time', description: 'Ácido Glicólico — Solo noche',      productId: 'default-glycolic', allowedTime: 'night' },
+  // ── Periodo de descanso post-Dermaplaning ─────────────────────────────────
+  { id: 'builtin-r1', isBuiltIn: true, type: 'rest', description: 'Post-Dermaplaning: 3 días antes de Retinol',              productAId: 'default-dermaplaning', productBId: 'default-retinol',  minDays: 3 },
+  { id: 'builtin-r2', isBuiltIn: true, type: 'rest', description: 'Post-Dermaplaning: 3 días antes de Máscara AHA-BHA-PHA',  productAId: 'default-dermaplaning', productBId: 'default-mask',     minDays: 3 },
+  { id: 'builtin-r3', isBuiltIn: true, type: 'rest', description: 'Post-Dermaplaning: 3 días antes de Ácido Azelaico',       productAId: 'default-dermaplaning', productBId: 'default-azelaic',  minDays: 3 },
+  { id: 'builtin-r4', isBuiltIn: true, type: 'rest', description: 'Post-Dermaplaning: 3 días antes de Ácido Glicólico',      productAId: 'default-dermaplaning', productBId: 'default-glycolic', minDays: 3 },
+  // ── Periodo de descanso post-PDRN ────────────────────────────────────────
+  { id: 'builtin-r5', isBuiltIn: true, type: 'rest', description: 'Post-PDRN: 2 días antes de Retinol',              productAId: 'default-pdrn', productBId: 'default-retinol',  minDays: 2 },
+  { id: 'builtin-r6', isBuiltIn: true, type: 'rest', description: 'Post-PDRN: 2 días antes de Máscara AHA-BHA-PHA',  productAId: 'default-pdrn', productBId: 'default-mask',     minDays: 2 },
+  { id: 'builtin-r7', isBuiltIn: true, type: 'rest', description: 'Post-PDRN: 2 días antes de Ácido Glicólico',      productAId: 'default-pdrn', productBId: 'default-glycolic', minDays: 2 },
+]
+
 // ─── Default products ─────────────────────────────────────────────────────────
 const DEFAULT_PRODUCTS: Product[] = [
   {
@@ -154,6 +182,7 @@ interface AppStore {
 
   // Custom rules
   addCustomRule: (rule: Omit<CustomRule, 'id'>) => void
+  editCustomRule: (id: string, updates: Partial<Omit<CustomRule, 'id'>>) => void
   deleteCustomRule: (id: string) => void
 
   // Settings
@@ -174,7 +203,7 @@ export const useStore = create<AppStore>()(
       calendar: {},
       settings: DEFAULT_SETTINGS,
       activeTab: 'today',
-      customRules: [],
+      customRules: BUILTIN_CUSTOM_RULES,
 
       addProduct: (product) => {
         const id = `product-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -318,6 +347,12 @@ export const useStore = create<AppStore>()(
         set(state => ({ customRules: [...state.customRules, { ...rule, id }] }))
       },
 
+      editCustomRule: (id, updates) => {
+        set(state => ({
+          customRules: state.customRules.map(r => r.id === id ? { ...r, ...updates } : r),
+        }))
+      },
+
       deleteCustomRule: (id) => {
         set(state => ({ customRules: state.customRules.filter(r => r.id !== id) }))
       },
@@ -345,11 +380,22 @@ export const useStore = create<AppStore>()(
       },
 
       resetData: () => {
-        set({ products: DEFAULT_PRODUCTS, calendar: {}, settings: DEFAULT_SETTINGS, customRules: [] })
+        set({ products: DEFAULT_PRODUCTS, calendar: {}, settings: DEFAULT_SETTINGS, customRules: BUILTIN_CUSTOM_RULES })
       },
     }),
     {
       name: 'skincare-calendar-v1',
+      // Migration: add any missing built-in rules individually (handles upgrades)
+      merge: (persistedState: unknown, currentState: AppStore) => {
+        const ps = (persistedState ?? {}) as Partial<AppStore>
+        const merged: AppStore = { ...currentState, ...ps }
+        const existingIds = new Set(merged.customRules.map((r: CustomRule) => r.id))
+        const missing = BUILTIN_CUSTOM_RULES.filter(r => !existingIds.has(r.id))
+        if (missing.length > 0) {
+          merged.customRules = [...missing, ...merged.customRules]
+        }
+        return merged
+      },
     },
   ),
 )
