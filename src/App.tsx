@@ -13,7 +13,7 @@ function PageContent() {
 
   return (
     <main
-      className="flex-1 overflow-hidden"
+      className="flex-1 overflow-y-auto"
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {activeTab === 'today'    && <TodayPage />}
