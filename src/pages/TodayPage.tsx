@@ -7,8 +7,8 @@ import { toDateStr, formatDisplay, formatDayName, format, es } from '../utils/da
 import { Product } from '../types'
 
 export function TodayPage() {
-  const products    = useProducts()
-  const calendar    = useCalendar()
+  const products = useProducts()
+  const calendar = useCalendar()
   const customRules = useCustomRules()
 
   const today = toDateStr(new Date())
@@ -21,9 +21,9 @@ export function TodayPage() {
 
   const greeting = (() => {
     const h = new Date().getHours()
-    if (h < 12) return '¡Buenos días mi amor! 🌅'
-    if (h < 18) return '¡Buenas tardes mi amor! ☀️'
-    return '¡Buenas noches mi amor! 🌙'
+    if (h < 12) return '¡Buenos días! 🌅'
+    if (h < 18) return '¡Buenas tardes! ☀️'
+    return '¡Buenas noches! 🌙'
   })()
 
   return (
